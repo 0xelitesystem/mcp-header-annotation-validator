@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MCP header annotation validator</title>
+<meta name="description" content="Paste an MCP tool definition. Get a clause-by-clause verdict on whether a conforming Streamable HTTP client will delete the tool from tools/list because of an x-mcp-header annotation, per spec revision 2026-07-28.">
+<link rel="canonical" href="https://0xelitesystem.github.io/mcp-header-annotation-validator/">
+<meta property="og:title" content="MCP header annotation validator">
+<meta property="og:description" content="Paste an MCP tool definition. Get a clause-by-clause verdict on whether a conforming Streamable HTTP client will delete the tool from tools/list because of an x-mcp-header annotation, per spec revision 2026-07-28.">
+<meta property="og:url" content="https://0xelitesystem.github.io/mcp-header-annotation-validator/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"MCP header annotation validator","applicationCategory":"DeveloperApplication","operatingSystem":"Any (browser)","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"url":"https://0xelitesystem.github.io/mcp-header-annotation-validator/","author":{"@type":"Person","name":"0xelitesystem","url":"https://elitesystem.ai"}}
+</script>
+<script>
+(function () {
+  try {
+    var t = localStorage.getItem("mcp-hdr-theme");
+    if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+  } catch (e) { /* storage blocked; fall back to the media query */ }
+})();
+</script>
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #0a0a0a; --bg-deep: #050505; --surface: #111110; --surface-2: #161614;
+  --ink: #e8e8e3; --ink-soft: #a8a8a3; --muted: #6e6e68; --rule: #1f1f1d;
+  --rule-2: #2a2a27; --accent: #d4ff3a; --accent-2: #ffb454; --on-accent: #0a0a0a;
+  --code-bg: #111110; --ok: #7ddc7d; --warn: #ffb454; --err: #ff6450; --info: #6fd3e0;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #e8ebef; --bg-deep: #f4f5f8; --surface: #dee2e8; --surface-2: #d3d7df;
+    --ink: #0a0a0a; --ink-soft: #2a2a27; --muted: #6e6e68; --rule: #c8cdd5;
+    --rule-2: #aab0ba; --accent: #2d6b00; --accent-2: #8a4d00; --on-accent: #ffffff;
+    --code-bg: #dee2e8; --ok: #1a5c2e; --warn: #8a4d00; --err: #a82d14; --info: #0f5c60;
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #e8ebef; --bg-deep: #f4f5f8; --surface: #dee2e8; --surface-2: #d3d7df;
+  --ink: #0a0a0a; --ink-soft: #2a2a27; --muted: #6e6e68; --rule: #c8cdd5;
+  --rule-2: #aab0ba; --accent: #2d6b00; --accent-2: #8a4d00; --on-accent: #ffffff;
+  --code-bg: #dee2e8; --ok: #1a5c2e; --warn: #8a4d00; --err: #a82d14; --info: #0f5c60;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0a0a0a; --bg-deep: #050505; --surface: #111110; --surface-2: #161614;
+  --ink: #e8e8e3; --ink-soft: #a8a8a3; --muted: #6e6e68; --rule: #1f1f1d;
+  --rule-2: #2a2a27; --accent: #d4ff3a; --accent-2: #ffb454; --on-accent: #0a0a0a;
+  --code-bg: #111110; --ok: #7ddc7d; --warn: #ffb454; --err: #ff6450; --info: #6fd3e0;
+}
+* { box-sizing: border-box; }
+html, body { max-width: 100%; overflow-x: hidden; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 16px/1.6 ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 68rem; margin: 0 auto; padding: 1.25rem 1rem 4rem; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+code, pre, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+code { background: var(--code-bg); border: 1px solid var(--rule); border-radius: 4px; padding: 0.05em 0.3em; font-size: 0.92em; word-break: break-word; }
+pre { background: var(--code-bg); border: 1px solid var(--rule); border-radius: 8px; padding: 0.75rem; overflow-x: auto; font-size: 0.85rem; line-height: 1.5; }
+h1 { font-size: clamp(1.5rem, 5vw, 2.1rem); line-height: 1.2; margin: 0 0 0.4rem; letter-spacing: -0.01em; }
+h2 { font-size: 1.18rem; margin: 2.25rem 0 0.6rem; padding-bottom: 0.35rem; border-bottom: 1px solid var(--rule-2); }
+h3 { font-size: 1rem; margin: 1.4rem 0 0.4rem; }
+p { margin: 0.6rem 0; }
+.lede { color: var(--ink-soft); font-size: 1.02rem; margin: 0 0 0.5rem; }
+.topbar { display: flex; gap: 0.75rem; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; }
+.rev { display: inline-block; font-size: 0.78rem; color: var(--ink-soft); border: 1px solid var(--rule-2); border-radius: 999px; padding: 0.1rem 0.6rem; }
+button {
+  font: inherit; font-size: 0.9rem; cursor: pointer; border-radius: 8px;
+  border: 1px solid var(--rule-2); background: transparent; color: var(--ink);
+  padding: 0.45rem 0.8rem;
+}
+button:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 700; }
+.row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin: 0.7rem 0; }
+textarea {
+  width: 100%; min-height: 15rem; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem; line-height: 1.5; padding: 0.7rem; border-radius: 8px;
+  border: 1px solid var(--rule-2); background: var(--surface); color: var(--ink);
+}
+input[type="text"] {
+  font: inherit; font-size: 0.9rem; padding: 0.45rem 0.6rem; border-radius: 8px;
+  border: 1px solid var(--rule-2); background: var(--surface); color: var(--ink);
+  max-width: 100%; flex: 1 1 16rem; min-width: 0;
+}
+.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 0.9rem 1rem; margin: 0.9rem 0; }
+.panel h3 { margin-top: 0; }
+.verdict { border-radius: 10px; border: 2px solid var(--rule-2); padding: 0.9rem 1rem; margin: 1rem 0; background: var(--surface); }
+.verdict .badge { font-weight: 800; font-size: 1.05rem; letter-spacing: 0.02em; display: block; margin-bottom: 0.25rem; }
+.v-conforms { border-color: var(--ok); } .v-conforms .badge { color: var(--ok); }
+.v-drop { border-color: var(--err); } .v-drop .badge { color: var(--err); }
+.v-amb { border-color: var(--warn); } .v-amb .badge { color: var(--warn); }
+.v-info { border-color: var(--info); } .v-info .badge { color: var(--info); }
+.err-box { border: 2px solid var(--err); border-radius: 10px; padding: 0.8rem 1rem; margin: 1rem 0; background: var(--surface); color: var(--ink); }
+.err-box strong { color: var(--err); }
+.tablewrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 10px; margin: 0.8rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: 0.85rem; min-width: 34rem; }
+th, td { text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { background: var(--surface-2); font-weight: 700; }
+tr:last-child td { border-bottom: none; }
+td.path { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; word-break: break-all; }
+.s-pass { color: var(--ok); font-weight: 700; }
+.s-drop { color: var(--err); font-weight: 700; }
+.s-amb { color: var(--warn); font-weight: 700; }
+.s-na { color: var(--ink-soft); }
+.s-info { color: var(--info); font-weight: 700; }
+.finding { border-left: 3px solid var(--rule-2); padding: 0.5rem 0 0.5rem 0.8rem; margin: 0.8rem 0; }
+.finding.drop { border-left-color: var(--err); }
+.finding.amb { border-left-color: var(--warn); }
+.finding.ok { border-left-color: var(--ok); }
+.finding .clause { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); }
+.small { font-size: 0.85rem; color: var(--ink-soft); }
+.note { font-size: 0.85rem; color: var(--ink-soft); border-left: 3px solid var(--info); padding-left: 0.7rem; margin: 0.7rem 0; }
+blockquote { margin: 0.7rem 0; padding: 0.6rem 0.9rem; border-left: 3px solid var(--accent); background: var(--surface-2); border-radius: 0 8px 8px 0; }
+blockquote p { margin: 0.35rem 0; }
+ul { padding-left: 1.2rem; }
+li { margin: 0.25rem 0; }
+details { border: 1px solid var(--rule); border-radius: 10px; padding: 0.6rem 0.9rem; margin: 0.8rem 0; background: var(--surface); }
+summary { cursor: pointer; font-weight: 700; }
+footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--rule-2); font-size: 0.88rem; color: var(--ink-soft); }
+footer a { margin-right: 0.4rem; }
+.sep { color: var(--ink-soft); padding: 0 0.35rem; }
+.hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topbar">
+  <div>
+    <h1>MCP header annotation validator</h1>
+    <p class="lede">Paste a tool definition. Find out whether a conforming Streamable HTTP client deletes it from <code>tools/list</code>.</p>
+    <span class="rev">Checked against spec revision 2026-07-28</span>
+  </div>
+  <button id="themeBtn" type="button" aria-label="Toggle colour theme">Theme</button>
+</div>
+
+<p>Your SDK writes the schema. <code>model_json_schema()</code> in Pydantic and
+<code>zod-to-json-schema</code> both emit <code>$defs</code> plus <code>$ref</code> for any nested
+model, and <code>anyOf</code> for any optional field. An <code>x-mcp-header</code> annotation that
+lands inside either one is not statically reachable from the schema root, and the
+2026-07-28 constraint list makes that a rejection. The client drops the whole tool and
+tells your server nothing. Load the first sample below to see it.</p>
+
+<h2 id="check">Check a tool definition</h2>
+
+<div class="row" id="samples">
+  <span class="small">Load a case:</span>
+</div>
+
+<label class="small" for="src">Tool definition JSON (the object with <code>name</code> and <code>inputSchema</code>, or a bare <code>inputSchema</code>)</label>
+<textarea id="src" spellcheck="false" aria-describedby="srchelp"></textarea>
+<p id="srchelp" class="small">Nothing is uploaded. The parse, the graph traversal and every clause check run in this page.</p>
+
+<div class="row">
+  <button class="primary" id="runBtn" type="button">Validate</button>
+  <button id="clearBtn" type="button">Clear</button>
+</div>
+
+<div id="out" aria-live="polite"></div>
+
+<h2 id="runtime">Runtime value panel (does not feed the verdict)</h2>
+<div class="panel">
+  <p class="small">Everything above is <strong>definition validity</strong>. It is decided from
+  <code>inputSchema</code> alone, with no argument values in hand. How a client turns a call
+  argument into the bytes of an <code>Mcp-Param-{name}</code> field value is a separate, runtime
+  obligation, and it is normatively defined in <em>Custom Headers from Tool Parameters</em> on
+  the Streamable HTTP transport page. That page is not part of the offline spec copy this tool
+  was built against, so this panel computes the encoding arithmetic for you and asserts nothing
+  about the transport page's table. A non-ASCII <code>default</code> in a schema is
+  <strong>not</strong> a definition-validity failure and never changes the verdict above.</p>
+  <div class="row">
+    <label class="small" for="valIn">Sample argument value</label>
+    <input type="text" id="valIn" spellcheck="false" value="Sao Paulo">
+    <button id="encBtn" type="button">Encode</button>
+  </div>
+  <div id="encOut"></div>
+</div>
+
+<h2 id="spec">The normative text</h2>
+<p class="small">Quoted verbatim from the on-disk copy of
+<em>Tools</em>, Model Context Protocol specification, page banner "Version 2026-07-28 (latest)".
+Superscripts and the U+2212 minus sign are rendered in ASCII as <code>^</code> and <code>-</code>;
+nothing else is altered.</p>
+
+<h3>Tool data type</h3>
+<blockquote><p>Properties <strong>MAY</strong> include an <code>x-mcp-header</code> annotation to
+expose parameter values as HTTP headers</p></blockquote>
+
+<h3>x-mcp-header</h3>
+<blockquote>
+<p>The <code>x-mcp-header</code> extension property allows servers to designate specific tool
+parameters to be mirrored into HTTP headers when using the Streamable HTTP transport. This
+enables network intermediaries (load balancers, proxies, WAFs) to route and process requests
+based on parameter values without parsing the request body.</p>
+<p>The <code>x-mcp-header</code> property is placed directly within the JSON Schema of the
+property to be mirrored. Its value specifies the name portion of the resulting
+<code>Mcp-Param-{name}</code> HTTP header.</p>
+<p><strong>Constraints on <code>x-mcp-header</code> values:</strong></p>
+<ul>
+<li><strong>MUST NOT</strong> be empty</li>
+<li><strong>MUST</strong> match HTTP field-name token syntax (<code>1*tchar</code>, RFC 9110 Section 5.1)</li>
+<li><strong>MUST NOT</strong> contain control characters, including carriage return (CR, <code>\r</code>) or line feed (LF, <code>\n</code>)</li>
+<li><strong>MUST</strong> be case-insensitively unique among all <code>x-mcp-header</code> values in the <code>inputSchema</code></li>
+<li><strong>MUST</strong> only be applied to parameters with primitive types (integer, string, boolean). Parameters with type <code>number</code> are not permitted. Integer values <strong>MUST</strong> be within the safe range for integers represented using IEEE754 double-precision floating point numbers (-2^53+1 to 2^53-1)</li>
+<li><strong>MUST</strong> only be applied to properties that are <em>statically reachable</em> from the schema root, as defined in Custom Headers from Tool Parameters, which also defines how header values are extracted from call arguments</li>
+</ul>
+<p>Clients using the Streamable HTTP transport <strong>MUST</strong> reject tool definitions where
+any <code>x-mcp-header</code> value violates these constraints. Rejection means the client
+<strong>MUST</strong> exclude the invalid tool from the result of <code>tools/list</code>. Clients
+<strong>SHOULD</strong> log a warning when rejecting a tool definition, including the tool name and
+the reason for rejection. This ensures that a single malformed tool definition does not prevent
+other valid tools from being used. Clients using other transports (e.g., stdio) <strong>MAY</strong>
+ignore <code>x-mcp-header</code> annotations entirely.</p>
+<p>Server developers <strong>SHOULD NOT</strong> mark sensitive parameters (passwords, API keys,
+tokens, PII) with <code>x-mcp-header</code>, as header values are visible to network
+intermediaries.</p>
+</blockquote>
+
+<p>Two things in that block do the damage. Rejection is at <strong>MUST</strong> and it removes the
+entire tool, not the annotation. The feedback path is at <strong>SHOULD</strong> and it is a client-side
+log line, so a server operator can watch a tool vanish from every client with nothing in their own
+logs to explain it.</p>
+
+<details>
+<summary>What this tool does not decide</summary>
+<ul>
+<li><strong>Only <code>inputSchema</code>.</strong> The constraint list names <code>inputSchema</code>
+and only <code>inputSchema</code>. Annotations found in <code>outputSchema</code> are counted and
+reported as out of scope, never as violations, and they do not participate in the uniqueness scan.</li>
+<li><strong>The integer bound is often undecidable.</strong> A schema holds no argument values. The
+bound is only checkable when the schema statically pins one through <code>const</code>,
+<code>enum</code>, <code>default</code>, <code>maximum</code> or <code>minimum</code>. Otherwise this
+tool prints "not determinable" rather than guessing.</li>
+<li><strong>The definition of <em>statically reachable</em> lives on the transport page.</strong>
+This tool implements the plain reading given in the constraint: a chain of <code>properties</code>
+keys from the schema root. Every other schema keyword is treated as breaking the chain.</li>
+<li><strong>No network, no resolution of external <code>$ref</code>.</strong> A <code>$ref</code> is
+treated as a chain break wherever it points.</li>
+</ul>
+</details>
+
+<h2 id="about">Independence</h2>
+<p class="small">This is an independent tool by 0xelitesystem. It is not affiliated with, endorsed
+by, or connected to the Model Context Protocol project, Pydantic, or the authors of
+<code>zod-to-json-schema</code>. Those names appear only because their published output shapes are
+what trip the constraint. The spec text quoted above is quoted for identification and commentary;
+no code from any of those projects is reproduced here. The checks were implemented from the
+normative constraint list, not ported from an implementation.</p>
+
+<h2 id="related">Related tools</h2>
+<ul>
+<li><a href="https://github.com/0xelitesystem/mcp-tool-poisoning-scanner">mcp-tool-poisoning-scanner</a> - description-field attacks in tool definitions.</li>
+<li><a href="https://github.com/0xelitesystem/mcp-server-privilege-inventory">mcp-server-privilege-inventory</a> - what a server can actually reach.</li>
+<li><a href="https://github.com/0xelitesystem/json-schema-to-tool-definition">json-schema-to-tool-definition</a> - build the schema in the first place.</li>
+</ul>
+
+<footer>
+<a href="https://elitesystem.ai">elitesystem.ai</a><span class="sep">|</span>
+<a href="https://github.com/0xelitesystem/mcp-header-annotation-validator">source</a><span class="sep">|</span>
+<a href="https://0xelitesystem.github.io/">catalog</a>
+<p class="small">MIT licensed. Single file, no network, no analytics.</p>
+</footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- theme ---------- */
+  var root = document.documentElement;
+  var themeBtn = document.getElementById("themeBtn");
+  function currentTheme() {
+    var a = root.getAttribute("data-theme");
+    if (a === "light" || a === "dark") return a;
+    try {
+      if (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) return "light";
+    } catch (e) { /* ignore */ }
+    return "dark";
+  }
+  themeBtn.addEventListener("click", function () {
+    var next = currentTheme() === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("mcp-hdr-theme", next); } catch (e) { /* storage blocked */ }
+  });
+
+  /* ---------- helpers ---------- */
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  function el(tag, cls, html) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (html !== undefined) n.innerHTML = html;
+    return n;
+  }
+  function ptrTok(k) { return String(k).replace(/~/g, "~0").replace(/\//g, "~1"); }
+  function typeName(v) {
+    if (v === null) return "null";
+    if (Array.isArray(v)) return "an array";
+    return "a " + typeof v;
+  }
+  function isSchemaObj(v) { return v !== null && typeof v === "object" && !Array.isArray(v); }
+
+  /* ---------- RFC 9110 Section 5.1 token characters ---------- */
+  /* tchar, as enumerated by the token production this tool enforces. */
+  var TCHAR_PUNCT = "!#$%&'*+-.^_`|~";
+  function isTchar(ch) {
+    if (ch >= "0" && ch <= "9") return true;
+    if (ch >= "A" && ch <= "Z") return true;
+    if (ch >= "a" && ch <= "z") return true;
+    return TCHAR_PUNCT.indexOf(ch) >= 0;
+  }
+  var MAX_SAFE = 9007199254740991; /* 2^53 - 1 */
+
+  /* ---------- schema graph ---------- */
+  var MAP_KEYS = ["properties", "patternProperties", "dependentSchemas", "$defs", "definitions"];
+  var LIST_KEYS = ["allOf", "anyOf", "oneOf", "prefixItems"];
+  var SINGLE_KEYS = ["items", "additionalItems", "unevaluatedItems", "contains",
+    "additionalProperties", "unevaluatedProperties", "propertyNames",
+    "not", "if", "then", "else", "contentSchema"];
+
+  var KIND_LABEL = {
+    "root": "schema root",
+    "properties": "property",
+    "patternProperties": "patternProperties subschema",
+    "dependentSchemas": "dependentSchemas subschema",
+    "$defs": "$defs member",
+    "definitions": "definitions member",
+    "allOf": "allOf branch",
+    "anyOf": "anyOf branch",
+    "oneOf": "oneOf branch",
+    "prefixItems": "prefixItems element",
+    "items": "items subschema",
+    "additionalItems": "additionalItems subschema",
+    "unevaluatedItems": "unevaluatedItems subschema",
+    "contains": "contains subschema",
+    "additionalProperties": "additionalProperties subschema",
+    "unevaluatedProperties": "unevaluatedProperties subschema",
+    "propertyNames": "propertyNames subschema",
+    "not": "not subschema",
+    "if": "if subschema",
+    "then": "then subschema",
+    "else": "else subschema",
+    "contentSchema": "contentSchema subschema"
+  };
+
+  /*
+   * Traverse the whole schema. Reachability is true only when every hop from the
+   * root was a `properties` key on an already-reachable node. Every other schema
+   * keyword sets reachable to false and records itself as the chain breaker.
+   * The walk still descends into unreachable regions, because annotations there
+   * are real: they count toward uniqueness and they are themselves violations.
+   */
+  function traverse(rootSchema) {
+    var nodes = [], anns = [], refs = [];
+    var seen = new Set();
+
+    function visit(node, path, reachable, breaker, kind) {
+      if (!isSchemaObj(node)) return;
+      if (seen.has(node)) return;  /* cycles: JSON cannot make one, but a hand-built object can */
+      seen.add(node);
+
+      nodes.push({ path: path, reachable: reachable, breaker: breaker, kind: kind, node: node });
+      if (typeof node["$ref"] === "string") refs.push({ from: path, target: node["$ref"] });
+      if (Object.prototype.hasOwnProperty.call(node, "x-mcp-header")) {
+        anns.push({ path: path, value: node["x-mcp-header"], reachable: reachable,
+                    breaker: breaker, kind: kind, node: node });
+      }
+
+      var i, k, key, keys, child;
+      for (i = 0; i < MAP_KEYS.length; i++) {
+        k = MAP_KEYS[i];
+        if (!isSchemaObj(node[k])) continue;
+        keys = Object.keys(node[k]);
+        for (var j = 0; j < keys.length; j++) {
+          key = keys[j];
+          child = node[k][key];
+          if (k === "properties") {
+            visit(child, path + "/properties/" + ptrTok(key), reachable, breaker, "properties");
+          } else {
+            visit(child, path + "/" + k + "/" + ptrTok(key), false, breaker || k, k);
+          }
+        }
+      }
+      for (i = 0; i < LIST_KEYS.length; i++) {
+        k = LIST_KEYS[i];
+        if (!Array.isArray(node[k])) continue;
+        for (var a = 0; a < node[k].length; a++) {
+          visit(node[k][a], path + "/" + k + "/" + a, false, breaker || k, k);
+        }
+      }
+      for (i = 0; i < SINGLE_KEYS.length; i++) {
+        k = SINGLE_KEYS[i];
+        if (node[k] === undefined) continue;
+        if (Array.isArray(node[k])) {          /* draft-07 tuple form of `items` */
+          for (var b = 0; b < node[k].length; b++) {
+            visit(node[k][b], path + "/" + k + "/" + b, false, breaker || k, k);
+          }
+        } else {
+          visit(node[k], path + "/" + k, false, breaker || k, k);
+        }
+      }
+      /* a $ref on this node breaks the chain for whatever it points at */
+      if (typeof node["$ref"] === "string" && reachable && !breaker) {
+        /* nothing to descend into; recorded above for the reachability message */
+      }
+    }
+
+    visit(rootSchema, "", true, null, "root");
+    return { nodes: nodes, anns: anns, refs: refs };
+  }
+
+  /* Which reachable positions $ref into a given $defs/definitions member? */
+  function refsInto(refs, path) {
+    var target = "#" + path;
+    var out = [];
+    for (var i = 0; i < refs.length; i++) {
+      if (refs[i].target === target) out.push(refs[i].from);
+    }
+    return out;
+  }
+
+  function defMemberPath(path) {
+    var m = /^\/(\$defs|definitions)\/[^/]+/.exec(path);
+    return m ? m[0] : null;
+  }
+
+  function reachMessage(a, refs) {
+    if (a.kind === "root") {
+      return "The annotation sits on the schema root. The root is the argument object itself, " +
+             "not a parameter, so there is no property for the constraint to apply to.";
+    }
+    var dp = defMemberPath(a.path);
+    if (dp && (a.breaker === "$defs" || a.breaker === "definitions")) {
+      var sources = refsInto(refs, dp);
+      if (sources.length) {
+        return "The path leaves the root at " + a.breaker + ". The only way in is " +
+               "$ref from " + sources.map(function (s) { return codeOf(s || "(root)"); }).join(", ") +
+               ", and $ref is not a properties key, so this property has no static path from the " +
+               "root. Nobody typed that $ref by hand: Pydantic's model_json_schema() and " +
+               "zod-to-json-schema emit $defs plus $ref for every nested model.";
+      }
+      return "The path leaves the root at " + a.breaker + ", and nothing $refs " + codeOf(dp) +
+             " at all. It is dead schema. It is still a reachability violation, and its value " +
+             "still counts toward case-insensitive uniqueness across the whole inputSchema.";
+    }
+    if (a.breaker === "anyOf" || a.breaker === "oneOf") {
+      return "The path leaves the root at " + a.breaker + ". Branches of a union have no fixed " +
+             "path from the root, so nothing under them is statically reachable. An optional " +
+             "field is exactly what zod-to-json-schema emits as anyOf.";
+    }
+    if (a.breaker === "items" || a.breaker === "prefixItems" || a.breaker === "contains" ||
+        a.breaker === "additionalItems" || a.breaker === "unevaluatedItems") {
+      return "The path leaves the root at " + a.breaker + ". Array elements have no fixed path " +
+             "from the root, so nothing beneath them is statically reachable.";
+    }
+    return "The path leaves the properties chain at " + a.breaker + ". Static reachability " +
+           "requires a chain of properties keys from the schema root and nothing else.";
+  }
+
+  function codeOf(s) { return "<code>" + esc(s === "" ? "(root)" : s) + "</code>"; }
+
+  /* ---------- static value pinning, for the integer bound ---------- */
+  var PIN_KEYS = ["const", "enum", "default", "maximum", "minimum"];
+  function pinnedNumbers(node) {
+    var out = [];
+    for (var i = 0; i < PIN_KEYS.length; i++) {
+      var k = PIN_KEYS[i];
+      if (!Object.prototype.hasOwnProperty.call(node, k)) continue;
+      var v = node[k];
+      if (k === "enum") {
+        if (Array.isArray(v)) {
+          for (var j = 0; j < v.length; j++) {
+            if (typeof v[j] === "number") out.push({ key: "enum[" + j + "]", value: v[j] });
+          }
+        }
+      } else if (typeof v === "number") {
+        out.push({ key: k, value: v });
+      }
+    }
+    return out;
+  }
+
+  /* ---------- clause engine ---------- */
+  var CLAUSES = [
+    { id: "empty", text: "MUST NOT be empty" },
+    { id: "token", text: "MUST match HTTP field-name token syntax (1*tchar, RFC 9110 Section 5.1)" },
+    { id: "ctrl", text: "MUST NOT contain control characters, including CR and LF" },
+    { id: "uniq", text: "MUST be case-insensitively unique across the whole inputSchema" },
+    { id: "prim", text: "MUST only be applied to primitive types (integer, string, boolean); number not permitted" },
+    { id: "int53", text: "Integer values MUST be within -2^53+1 to 2^53-1" },
+    { id: "reach", text: "MUST only be applied to properties statically reachable from the schema root" }
+  ];
+
+  function validate(def) {
+    var res = {
+      toolName: null, input: null, output: null,
+      errors: [], anns: [], nodes: [], refs: [],
+      outAnns: [], clause: {}, verdict: "CONFORMS", notes: []
+    };
+    var i, j;
+
+    for (i = 0; i < CLAUSES.length; i++) res.clause[CLAUSES[i].id] = "na";
+
+    var input = null;
+    if (isSchemaObj(def) && Object.prototype.hasOwnProperty.call(def, "inputSchema")) {
+      res.toolName = typeof def.name === "string" ? def.name : null;
+      input = def.inputSchema;
+      if (isSchemaObj(def.outputSchema)) res.output = def.outputSchema;
+    } else if (isSchemaObj(def)) {
+      input = def;
+      res.notes.push("No <code>inputSchema</code> key at the top level, so the whole object was " +
+        "treated as the inputSchema. Paste the full tool definition to have the tool name reported.");
+    } else {
+      res.errors.push("The top-level JSON value is " + typeName(def) +
+        ". A tool definition must be a JSON object.");
+      return res;
+    }
+
+    if (input === null) {
+      res.errors.push("<code>inputSchema</code> is <code>null</code>. The Tool data type says it " +
+        "<strong>MUST</strong> be a valid JSON Schema object (not null). That is a separate MUST " +
+        "from the x-mcp-header constraint list, so no header verdict is produced.");
+      return res;
+    }
+    if (!isSchemaObj(input)) {
+      res.errors.push("<code>inputSchema</code> is " + typeName(input) +
+        ". It must be a JSON Schema object.");
+      return res;
+    }
+
+    res.input = input;
+    var g = traverse(input);
+    res.nodes = g.nodes;
+    res.refs = g.refs;
+
+    if (res.output) {
+      var go = traverse(res.output);
+      res.outAnns = go.anns;
+    }
+
+    /* uniqueness groups, string values only, across the entire inputSchema */
+    var groups = {};
+    for (i = 0; i < g.anns.length; i++) {
+      var v = g.anns[i].value;
+      if (typeof v !== "string" || v.length === 0) continue;
+      var key = v.toLowerCase();
+      (groups[key] = groups[key] || []).push(g.anns[i]);
+    }
+
+    for (i = 0; i < g.anns.length; i++) {
+      var a = g.anns[i];
+      a.issues = [];
+      var val = a.value;
+
+      /* --- name syntax --- */
+      if (typeof val !== "string") {
+        a.issues.push({ c: "token", state: "drop",
+          msg: "The value is " + typeName(val) + ", not a string, so it cannot match " +
+               "<code>1*tchar</code>." });
+      } else if (val.length === 0) {
+        a.issues.push({ c: "empty", state: "drop", msg: "The value is the empty string." });
+      } else {
+        var ctrls = [], nonT = [];
+        for (j = 0; j < val.length; j++) {
+          var cc = val.charCodeAt(j);
+          if (cc < 0x20 || cc === 0x7f) {
+            ctrls.push("U+" + ("000" + cc.toString(16).toUpperCase()).slice(-4) +
+                       " at index " + j);
+          } else if (!isTchar(val.charAt(j))) {
+            nonT.push("'" + val.charAt(j) + "' at index " + j);
+          }
+        }
+        if (ctrls.length) {
+          a.issues.push({ c: "ctrl", state: "drop",
+            msg: "Control characters present: " + esc(ctrls.join(", ")) + "." });
+        }
+        if (nonT.length) {
+          a.issues.push({ c: "token", state: "drop",
+            msg: "Characters outside tchar: " + esc(nonT.join(", ")) +
+                 ". tchar is the ASCII letters and digits plus <code>" + esc(TCHAR_PUNCT) +
+                 "</code>." });
+        }
+        var grp = groups[val.toLowerCase()];
+        if (grp && grp.length > 1) {
+          var others = [];
+          for (j = 0; j < grp.length; j++) if (grp[j] !== a) others.push(grp[j]);
+          a.issues.push({ c: "uniq", state: "drop",
+            msg: "Case-insensitively equal to " + others.length +
+                 " other annotation" + (others.length === 1 ? "" : "s") + " in the same " +
+                 "inputSchema: " + others.map(function (o) {
+                   return codeOf(o.path) + " (<code>" + esc(String(o.value)) + "</code>)";
+                 }).join(", ") + "." });
+        }
+      }
+
+      /* --- position and reachability --- */
+      if (a.kind !== "properties") {
+        a.issues.push({ c: "reach", state: "drop",
+          msg: "This is not a property subschema. It sits at the " +
+               (KIND_LABEL[a.kind] || a.kind) + " position. " + reachMessage(a, g.refs) });
+      } else if (!a.reachable) {
+        a.issues.push({ c: "reach", state: "drop", msg: reachMessage(a, g.refs) });
+      }
+
+      /* --- type --- */
+      var t = a.node.type;
+      if (t === undefined) {
+        a.issues.push({ c: "prim", state: "amb",
+          msg: "The annotated property declares no <code>type</code> keyword. The constraint " +
+               "says the annotation applies only to parameters with primitive types and the " +
+               "revision is silent on an untyped property. Clients may differ: a permissive one " +
+               "keeps the tool, a strict one drops it." });
+      } else if (Array.isArray(t)) {
+        var forbidden = [];
+        for (j = 0; j < t.length; j++) {
+          if (t[j] === "number" || t[j] === "object" || t[j] === "array" || t[j] === "null") {
+            forbidden.push(String(t[j]));
+          }
+        }
+        a.issues.push({ c: "prim", state: "amb",
+          msg: "The type is a union, <code>" + esc(JSON.stringify(t)) + "</code>. The constraint " +
+               "names three primitive types and says nothing about type arrays." +
+               (forbidden.length
+                 ? " This union includes " + esc(forbidden.join(", ")) +
+                   ", which is not in that set, so a strict client will very likely drop the tool."
+                 : " Every member here is a permitted primitive, so a permissive client will " +
+                   "likely keep it.") +
+               " Clients may differ. A union type is also what an optional field looks like in " +
+               "several generators." });
+      } else if (t === "number") {
+        a.issues.push({ c: "prim", state: "drop",
+          msg: "Type is <code>number</code>, which the constraint names explicitly as not " +
+               "permitted. Use <code>integer</code> or <code>string</code>." });
+      } else if (t !== "string" && t !== "integer" && t !== "boolean") {
+        a.issues.push({ c: "prim", state: "drop",
+          msg: "Type is <code>" + esc(String(t)) + "</code>, not one of integer, string, " +
+               "boolean." });
+      }
+
+      /* --- integer bound --- */
+      a.intNote = null;
+      if (t === "integer" || (Array.isArray(t) && t.indexOf("integer") >= 0)) {
+        var pins = pinnedNumbers(a.node);
+        if (!pins.length) {
+          a.intNote = "not determinable: the schema pins no value through const, enum, default, " +
+                      "maximum or minimum, and a definition holds no argument values.";
+        } else {
+          var bad = [];
+          for (j = 0; j < pins.length; j++) {
+            if (Math.abs(pins[j].value) > MAX_SAFE) {
+              bad.push(pins[j].key + " = " + pins[j].value);
+            }
+          }
+          if (bad.length) {
+            a.issues.push({ c: "int53", state: "drop",
+              msg: "Statically pinned outside the IEEE754 safe integer range " +
+                   "(-9007199254740991 to 9007199254740991): " + esc(bad.join(", ")) + "." });
+          } else {
+            a.intNote = "in range: " + pins.map(function (p) {
+              return p.key + " = " + p.value;
+            }).join(", ") + " all sit inside -9007199254740991 to 9007199254740991.";
+          }
+        }
+      }
+
+      /* roll clause statuses up */
+      for (j = 0; j < a.issues.length; j++) {
+        var c = a.issues[j].c, st = a.issues[j].state;
+        if (st === "drop") res.clause[c] = "drop";
+        else if (res.clause[c] !== "drop") res.clause[c] = "amb";
+      }
+    }
+
+    res.anns = g.anns;
+
+    /* clauses with no violation but with annotations present are passes */
+    if (g.anns.length) {
+      for (i = 0; i < CLAUSES.length; i++) {
+        var cid = CLAUSES[i].id;
+        if (res.clause[cid] === "na") {
+          if (cid === "int53") {
+            var anyInt = false, anyPinned = false;
+            for (j = 0; j < g.anns.length; j++) {
+              var ty = g.anns[j].node.type;
+              if (ty === "integer" || (Array.isArray(ty) && ty.indexOf("integer") >= 0)) {
+                anyInt = true;
+                if (pinnedNumbers(g.anns[j].node).length) anyPinned = true;
+              }
+            }
+            res.clause[cid] = anyInt ? (anyPinned ? "pass" : "nd") : "na";
+          } else {
+            res.clause[cid] = "pass";
+          }
+        }
+      }
+    }
+
+    /* verdict */
+    var anyDrop = false, anyAmb = false;
+    for (i = 0; i < g.anns.length; i++) {
+      for (j = 0; j < g.anns[i].issues.length; j++) {
+        if (g.anns[i].issues[j].state === "drop") anyDrop = true;
+        else anyAmb = true;
+      }
+    }
+    res.verdict = anyDrop ? "DROPPED" : (anyAmb ? "AMBIGUOUS" : "CONFORMS");
+    return res;
+  }
+
+  /* ---------- oversized integer literal scan on the raw text ---------- */
+  function oversizedLiterals(raw) {
+    var out = [], m;
+    var re = /-?\d{16,}/g;
+    while ((m = re.exec(raw)) !== null) {
+      var s = m[0];
+      var neg = s.charAt(0) === "-";
+      var digits = neg ? s.slice(1) : s;
+      digits = digits.replace(/^0+/, "") || "0";
+      if (digits.length > 16 || (digits.length === 16 && digits > "9007199254740991")) {
+        out.push(s);
+      }
+    }
+    return out;
+  }
+
+  /* ---------- eligibility map ---------- */
+  function eligibilityRows(nodes) {
+    var rows = [];
+    for (var i = 0; i < nodes.length; i++) {
+      var n = nodes[i];
+      if (n.kind === "root") continue;
+      var eligible = (n.kind === "properties" && n.reachable);
+      var why;
+      if (eligible) {
+        var t = n.node.type;
+        if (t === undefined) why = "position is legal; no type keyword, so the primitive-type clause is ambiguous";
+        else if (Array.isArray(t)) why = "position is legal; union type, so the primitive-type clause is ambiguous";
+        else if (t === "string" || t === "integer" || t === "boolean") why = "reachable through properties only; type " + t + " is a permitted primitive";
+        else if (t === "number") { eligible = false; why = "reachable, but type number is explicitly not permitted"; }
+        else { eligible = false; why = "reachable, but type " + String(t) + " is not a permitted primitive"; }
+      } else if (n.kind === "properties") {
+        why = "a property, but the path to it leaves the properties chain at " + n.breaker;
+      } else {
+        why = "not a property; this is the " + (KIND_LABEL[n.kind] || n.kind) + " position";
+      }
+      rows.push({
+        path: n.path,
+        position: KIND_LABEL[n.kind] || n.kind,
+        type: n.node.type === undefined ? "(none)" :
+              (Array.isArray(n.node.type) ? JSON.stringify(n.node.type) : String(n.node.type)),
+        eligible: eligible,
+        why: why
+      });
+    }
+    return rows;
+  }
+
+  /* ---------- render ---------- */
+  var out = document.getElementById("out");
+  var STATUS_HTML = {
+    pass: '<span class="s-pass">PASS</span>',
+    drop: '<span class="s-drop">VIOLATED</span>',
+    amb: '<span class="s-amb">AMBIGUOUS</span>',
+    na: '<span class="s-na">n/a</span>',
+    nd: '<span class="s-na">not determinable</span>'
+  };
+
+  function render(res, raw) {
+    out.innerHTML = "";
+
+    if (res.errors.length) {
+      var e = el("div", "err-box");
+      e.innerHTML = "<strong>Cannot validate.</strong><ul><li>" +
+        res.errors.join("</li><li>") + "</li></ul>";
+      out.appendChild(e);
+      return;
+    }
+
+    var name = res.toolName ? "<code>" + esc(res.toolName) + "</code>" : "this tool";
+    var v = el("div", "verdict");
+    var head, body;
+    if (res.verdict === "DROPPED") {
+      v.className = "verdict v-drop";
+      head = "DROPPED FROM tools/list";
+      body = "A conforming client on the Streamable HTTP transport <strong>MUST</strong> exclude " +
+        name + " from the result of <code>tools/list</code>. The client <strong>SHOULD</strong> log " +
+        "a warning. Your server is told nothing.";
+    } else if (res.verdict === "AMBIGUOUS") {
+      v.className = "verdict v-amb";
+      head = "SPEC-AMBIGUOUS";
+      body = "No clause is clearly violated, but at least one annotation sits in a shape the " +
+        "2026-07-28 constraint list does not resolve. Clients may differ, so " + name +
+        " may be visible in one client and gone in another. Do not ship it in this shape.";
+    } else if (!res.anns.length) {
+      v.className = "verdict v-conforms";
+      head = "CONFORMS (no x-mcp-header annotations)";
+      body = "No <code>x-mcp-header</code> annotation appears anywhere in the inputSchema, " +
+        "including unreferenced <code>$defs</code>. There is nothing for the rejection clause to " +
+        "act on. The eligibility map below shows where you could put one.";
+    } else {
+      v.className = "verdict v-conforms";
+      head = "CONFORMS";
+      body = "All " + res.anns.length + " annotation" + (res.anns.length === 1 ? "" : "s") +
+        " satisfy every constraint decidable from the inputSchema alone.";
+    }
+    v.innerHTML = '<span class="badge">' + head + "</span>" + body;
+    out.appendChild(v);
+
+    for (var i = 0; i < res.notes.length; i++) {
+      out.appendChild(el("p", "note", res.notes[i]));
+    }
+
+    /* clause table */
+    var ct = el("div");
+    ct.appendChild(el("h3", null, "Clause by clause"));
+    var rows = "";
+    for (i = 0; i < CLAUSES.length; i++) {
+      rows += "<tr><td>" + esc(CLAUSES[i].text) + "</td><td>" +
+        (STATUS_HTML[res.clause[CLAUSES[i].id]] || "") + "</td></tr>";
+    }
+    var w = el("div", "tablewrap");
+    w.innerHTML = "<table><thead><tr><th>Constraint (revision 2026-07-28)</th><th>Result</th>" +
+      "</tr></thead><tbody>" + rows + "</tbody></table>";
+    ct.appendChild(w);
+    out.appendChild(ct);
+
+    /* findings */
+    var f = el("div");
+    f.appendChild(el("h3", null, "Annotations found (" + res.anns.length + ")"));
+    if (!res.anns.length) {
+      f.appendChild(el("p", "small", "None in the inputSchema."));
+    }
+    for (i = 0; i < res.anns.length; i++) {
+      var a = res.anns[i];
+      var worst = "ok";
+      for (var j = 0; j < a.issues.length; j++) {
+        if (a.issues[j].state === "drop") { worst = "drop"; break; }
+        worst = "amb";
+      }
+      var d = el("div", "finding " + worst);
+      var h = "<p><code>" + esc(a.path === "" ? "(root)" : a.path) + "</code><br>" +
+        '<span class="small">value ' +
+        (typeof a.value === "string"
+          ? "<code>" + esc(JSON.stringify(a.value)) + "</code>"
+          : "<code>" + esc(JSON.stringify(a.value)) + "</code> (" + typeName(a.value) + ")") +
+        " at the " + esc(KIND_LABEL[a.kind] || a.kind) + " position, " +
+        (a.reachable && a.kind === "properties" ? "statically reachable" : "not statically reachable") +
+        "</span></p>";
+      if (!a.issues.length) {
+        h += '<p class="clause">clear</p><p>No constraint violated.</p>';
+      }
+      for (j = 0; j < a.issues.length; j++) {
+        var cl = null;
+        for (var k = 0; k < CLAUSES.length; k++) if (CLAUSES[k].id === a.issues[j].c) cl = CLAUSES[k];
+        h += '<p class="clause">CLAUSE: ' + esc(cl ? cl.text : a.issues[j].c) +
+             " - " + (a.issues[j].state === "drop" ? "VIOLATED" : "AMBIGUOUS") + "</p>";
+        h += "<p>" + a.issues[j].msg + "</p>";
+      }
+      if (a.intNote) {
+        h += '<p class="small">Integer bound: ' + esc(a.intNote) + "</p>";
+      }
+      d.innerHTML = h;
+      f.appendChild(d);
+    }
+    out.appendChild(f);
+
+    /* outputSchema scope note */
+    if (res.outAnns && res.outAnns.length) {
+      var o = el("p", "note");
+      o.innerHTML = "Scope: " + res.outAnns.length + " <code>x-mcp-header</code> annotation" +
+        (res.outAnns.length === 1 ? "" : "s") + " also appear in <code>outputSchema</code>. " +
+        "The constraint list is scoped to the <code>inputSchema</code>, so these are neither " +
+        "checked nor counted toward uniqueness. Flagging them would be a false positive.";
+      out.appendChild(o);
+    }
+
+    /* oversized literal scan */
+    var big = oversizedLiterals(raw);
+    if (big.length) {
+      var b = el("p", "note");
+      b.innerHTML = "Raw-text scan: integer literal" + (big.length === 1 ? "" : "s") +
+        " beyond the IEEE754 safe range in your pasted text: <code>" +
+        esc(big.join("</code>, <code>")) +
+        "</code>. Any JavaScript parser rounds these, so this scan reads the literal from the " +
+        "text rather than the parsed value. It is only a finding above if it pins an annotated " +
+        "integer property.";
+      out.appendChild(b);
+    }
+
+    /* eligibility map */
+    var rowsE = eligibilityRows(res.nodes);
+    var eligible = 0;
+    for (i = 0; i < rowsE.length; i++) if (rowsE[i].eligible) eligible++;
+    var em = el("div");
+    em.appendChild(el("h3", null, "Eligibility map"));
+    em.appendChild(el("p", "small",
+      "Every schema position below the root in this inputSchema, and whether it is legal to put " +
+      "an <code>x-mcp-header</code> there. Computed for this schema: " + rowsE.length +
+      " position" + (rowsE.length === 1 ? "" : "s") + ", " + eligible + " eligible."));
+    var er = "";
+    var cap = Math.min(rowsE.length, 120);
+    for (i = 0; i < cap; i++) {
+      er += '<tr><td class="path">' + esc(rowsE[i].path) + "</td><td>" +
+        esc(rowsE[i].position) + "</td><td><code>" + esc(rowsE[i].type) + "</code></td><td>" +
+        (rowsE[i].eligible ? '<span class="s-pass">yes</span>' : '<span class="s-drop">no</span>') +
+        "</td><td>" + esc(rowsE[i].why) + "</td></tr>";
+    }
+    if (!rowsE.length) {
+      er = '<tr><td colspan="5">The inputSchema has no subschemas below the root.</td></tr>';
+    }
+    var ew = el("div", "tablewrap");
+    ew.innerHTML = "<table><thead><tr><th>JSON pointer</th><th>Position</th><th>type</th>" +
+      "<th>Annotate here?</th><th>Why</th></tr></thead><tbody>" + er + "</tbody></table>";
+    em.appendChild(ew);
+    if (rowsE.length > cap) {
+      em.appendChild(el("p", "small", "Showing the first " + cap + " of " + rowsE.length + " positions."));
+    }
+    out.appendChild(em);
+  }
+
+  /* ---------- run ---------- */
+  function run() {
+    var raw = document.getElementById("src").value;
+    if (!raw.trim()) {
+      out.innerHTML = '<div class="err-box"><strong>Nothing to validate.</strong> The input is ' +
+        "empty. Paste a tool definition, or load one of the samples above.</div>";
+      return;
+    }
+    var def;
+    try {
+      def = JSON.parse(raw);
+    } catch (err) {
+      out.innerHTML = '<div class="err-box"><strong>That is not valid JSON.</strong><p>' +
+        esc(String(err && err.message ? err.message : err)) + "</p></div>";
+      return;
+    }
+    render(validate(def), raw);
+  }
+
+  document.getElementById("runBtn").addEventListener("click", run);
+  document.getElementById("clearBtn").addEventListener("click", function () {
+    document.getElementById("src").value = "";
+    out.innerHTML = "";
+  });
+
+  /* ---------- runtime value panel, firewalled from the verdict ---------- */
+  function utf8Bytes(s) {
+    var bytes = [], i, c;
+    for (i = 0; i < s.length; i++) {
+      c = s.codePointAt(i);
+      if (c > 0xffff) i++;
+      if (c < 0x80) bytes.push(c);
+      else if (c < 0x800) { bytes.push(0xc0 | (c >> 6), 0x80 | (c & 63)); }
+      else if (c < 0x10000) { bytes.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63)); }
+      else { bytes.push(0xf0 | (c >> 18), 0x80 | ((c >> 12) & 63), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63)); }
+    }
+    return bytes;
+  }
+  var B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  function b64(bytes) {
+    var s = "", i;
+    for (i = 0; i < bytes.length; i += 3) {
+      var b0 = bytes[i], b1 = bytes[i + 1], b2 = bytes[i + 2];
+      s += B64.charAt(b0 >> 2);
+      s += B64.charAt(((b0 & 3) << 4) | ((b1 === undefined ? 0 : b1) >> 4));
+      s += (b1 === undefined) ? "=" : B64.charAt(((b1 & 15) << 2) | ((b2 === undefined ? 0 : b2) >> 6));
+      s += (b2 === undefined) ? "=" : B64.charAt(b2 & 63);
+    }
+    return s;
+  }
+  var encOut = document.getElementById("encOut");
+  function encode() {
+    var s = document.getElementById("valIn").value;
+    if (s === "") {
+      encOut.innerHTML = '<div class="err-box"><strong>No value.</strong> Type an argument value ' +
+        "to encode.</div>";
+      return;
+    }
+    var bytes = utf8Bytes(s);
+    var hex = bytes.map(function (b) { return ("0" + b.toString(16)).slice(-2); }).join(" ");
+    var allPrintable = true, bad = [];
+    for (var i = 0; i < bytes.length; i++) {
+      if (bytes[i] < 0x20 || bytes[i] > 0x7e) { allPrintable = false; bad.push(i); }
+    }
+    encOut.innerHTML =
+      "<p class=\"small\">UTF-8 bytes (" + bytes.length + "): <code>" + esc(hex) + "</code></p>" +
+      "<p>" + (allPrintable
+        ? '<span class="s-pass">Every byte is printable US-ASCII (0x20 to 0x7E).</span> It can go ' +
+          "into an HTTP field value as-is."
+        : '<span class="s-info">' + bad.length + " byte" + (bad.length === 1 ? " is" : "s are") +
+          " outside printable US-ASCII" + '</span>, so this value cannot travel as raw bytes in ' +
+          "an HTTP field value and needs a transport-level encoding.") + "</p>" +
+      "<p class=\"small\">Standard base64 of those bytes (RFC 4648 alphabet, not the URL-safe " +
+      "variant): <code>" + esc(b64(bytes)) + "</code></p>" +
+      "<p class=\"small\">This panel is arithmetic, not a verdict. It never changes the " +
+      "definition-validity result above.</p>";
+  }
+  document.getElementById("encBtn").addEventListener("click", encode);
+
+  /* ---------- samples ---------- */
+  var PRESETS = [
+    {
+      label: "Pydantic nested model",
+      def: {
+        name: "create_order",
+        description: "Create an order.",
+        inputSchema: {
+          "$defs": {
+            "Address": {
+              type: "object",
+              title: "Address",
+              properties: {
+                region: { type: "string", title: "Region", "x-mcp-header": "Region" },
+                street: { type: "string", title: "Street" }
+              },
+              required: ["region", "street"]
+            }
+          },
+          type: "object",
+          properties: {
+            address: { "$ref": "#/$defs/Address" },
+            sku: { type: "string", title: "Sku" }
+          },
+          required: ["address", "sku"]
+        }
+      }
+    },
+    {
+      label: "zod optional field",
+      def: {
+        name: "search_docs",
+        description: "Search the docs.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            query: { type: "string" },
+            tenant: {
+              anyOf: [
+                { type: "string", "x-mcp-header": "Tenant" },
+                { type: "null" }
+              ],
+              default: null
+            }
+          },
+          required: ["query"],
+          additionalProperties: false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      }
+    },
+    {
+      label: "Unreferenced $defs",
+      def: {
+        name: "run_report",
+        description: "Run a report. The legacy model below is dead code nobody deleted.",
+        inputSchema: {
+          type: "object",
+          "$defs": {
+            LegacyFilter: {
+              type: "object",
+              properties: {
+                region: { type: "string", "x-mcp-header": "REGION" }
+              }
+            }
+          },
+          properties: {
+            region: { type: "string", "x-mcp-header": "Region" },
+            rows: { type: "integer", maximum: 5000, "x-mcp-header": "Rows" }
+          },
+          required: ["region"]
+        }
+      }
+    },
+    {
+      label: "Spec example (execute_sql)",
+      def: {
+        name: "execute_sql",
+        description: "Execute SQL on Google Cloud Spanner",
+        inputSchema: {
+          type: "object",
+          properties: {
+            region: {
+              type: "string",
+              description: "The region to execute the query in",
+              "x-mcp-header": "Region"
+            },
+            query: { type: "string", description: "The SQL query to execute" }
+          },
+          required: ["region", "query"]
+        }
+      }
+    },
+    {
+      label: "Union and untyped",
+      def: {
+        name: "route_call",
+        inputSchema: {
+          type: "object",
+          properties: {
+            shard: { type: ["string", "null"], "x-mcp-header": "Shard" },
+            lane: { "x-mcp-header": "Lane" }
+          }
+        }
+      }
+    },
+    {
+      label: "Bad names and types",
+      def: {
+        name: "hostile",
+        description: "Every name-level clause at once. One description carries a literal <\/script> to prove the page survives it.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            a: { type: "string", "x-mcp-header": "" },
+            b: { type: "string", "x-mcp-header": "X-Tenant Id" },
+            c: { type: "string", "x-mcp-header": "Trace\r\nX-Injected: 1" },
+            d: { type: "number", "x-mcp-header": "Ratio" },
+            e: { type: "integer", "x-mcp-header": "Cursor", "default": 10000000000000000 },
+            f: { type: "object", "x-mcp-header": "Blob", properties: {} },
+            g: { type: "string", "x-mcp-header": 42 }
+          }
+        },
+        outputSchema: {
+          type: "object",
+          properties: { ok: { type: "boolean", "x-mcp-header": "Ok" } }
+        }
+      }
+    },
+    {
+      label: "Array items",
+      def: {
+        name: "bulk_upsert",
+        inputSchema: {
+          type: "object",
+          properties: {
+            records: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: { region: { type: "string", "x-mcp-header": "Region" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      label: "Eligibility demo (no annotations)",
+      def: {
+        name: "eligibility_demo",
+        description: "An annotation-free schema, to read the eligibility map on.",
+        inputSchema: {
+          type: "object",
+          "$defs": {
+            Tag: { type: "object", properties: { label: { type: "string" } } }
+          },
+          properties: {
+            region: { type: "string" },
+            rows: { type: "integer" },
+            verbose: { type: "boolean" },
+            ratio: { type: "number" },
+            tag: { "$ref": "#/$defs/Tag" },
+            filters: {
+              type: "object",
+              properties: { since: { type: "string" } }
+            },
+            items: { type: "array", items: { type: "string" } },
+            mode: { anyOf: [{ type: "string" }, { type: "null" }] }
+          }
+        }
+      }
+    }
+  ];
+
+  var sampleBar = document.getElementById("samples");
+  PRESETS.forEach(function (s) {
+    var b = el("button", null, esc(s.label));
+    b.type = "button";
+    b.addEventListener("click", function () {
+      document.getElementById("src").value = JSON.stringify(s.def, null, 2);
+      run();
+      document.getElementById("out").scrollIntoView({ block: "start" });
+    });
+    sampleBar.appendChild(b);
+  });
+
+  /* load the headline sample so the page is never empty */
+  document.getElementById("src").value = JSON.stringify(PRESETS[0].def, null, 2);
+  run();
+  encode();
+})();
+</script>
+</body>
+</html>
